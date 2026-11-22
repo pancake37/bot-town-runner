@@ -1,0 +1,26 @@
+name: Bot Town Cloud Runner
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every 5 hours to stay active indefinitely
+    - cron: '0 */5 * * *'
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Bot Town Farmer
+        env:
+          BOTTOWN_TOKEN: ${{ secrets.BOTTOWN_TOKEN }}
+        run: |
+          python -u runner.py
