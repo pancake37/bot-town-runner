@@ -23,9 +23,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run Bot Town Farmer
+      - name: Run Bot Town 5-in-1 Syndicate
         env:
           BOTTOWN_TOKEN: ${{ secrets.BOTTOWN_TOKEN }}
+          BOTTOWN_TEAM: ${{ secrets.BOTTOWN_TEAM }}
         run: |
           python -u runner.py
 
