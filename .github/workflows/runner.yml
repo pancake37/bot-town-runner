@@ -3,8 +3,12 @@ name: Bot Town Cloud Runner
 on:
   workflow_dispatch:
   schedule:
-    # Run every 5 hours to stay active indefinitely
-    - cron: '0 */5 * * *'
+    # Fallback cron every 3 hours
+    - cron: '0 */3 * * *'
+
+permissions:
+  actions: write
+  contents: read
 
 jobs:
   run-bot:
@@ -24,3 +28,10 @@ jobs:
           BOTTOWN_TOKEN: ${{ secrets.BOTTOWN_TOKEN }}
         run: |
           python -u runner.py
+
+      - name: Chain next run automatically
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run runner.yml || true
