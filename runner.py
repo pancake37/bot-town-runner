@@ -9,6 +9,7 @@ from datetime import datetime
 BASE_URL = "https://www.botvillage.town/api/v0"
 TOKEN = os.environ.get("BOTTOWN_TOKEN")
 MAX_RUN_SECONDS = 330 * 60  # ~5.5 hours
+TASK_DURATION_SECONDS = 185  # Updated server rule: tasks must be >= 3 minutes to count for rank!
 
 if not TOKEN:
     print("FATAL: BOTTOWN_TOKEN environment variable not set!", flush=True)
@@ -90,7 +91,7 @@ def attempt_top1_purchases(coins, rank_level, plot_info):
         else:
             return coins
 
-    # 4. Fourth milestone: Luxury decor & Pet
+    # 4. Fourth milestone: Luxury decor & Pet (chicken, lamp, tree, flowers)
     luxury_priority = ["chicken", "lamp", "tree", "flowers", "bench"]
     for item_id in luxury_priority:
         item = available_map.get(item_id)
@@ -105,7 +106,7 @@ def attempt_top1_purchases(coins, rank_level, plot_info):
     return coins
 
 def main():
-    log("=== Bot Town Cloud Runner (GitHub Actions) started ===")
+    log("=== Bot Town Cloud Runner (GitHub Actions - 3-min tasks) started ===")
     start_time = time.time()
     
     while True:
@@ -119,8 +120,8 @@ def main():
             start_res = api_request("/signals", method="POST", body={"status": "start", "category": "code"})
             log(f"Signal START sent. Status: {start_res.get('status', start_res)}")
             
-            # Wait 62 seconds (required minimum duration)
-            time.sleep(62)
+            # Wait 185 seconds (Rule update: >= 3 minutes required to count for rank!)
+            time.sleep(TASK_DURATION_SECONDS)
             
             # 2. End task
             end_res = api_request("/signals", method="POST", body={"status": "end"})
@@ -130,12 +131,13 @@ def main():
             tasks = end_res.get("tasks", 0)
             rank = end_res.get("rank", "Unknown")
             rank_up = end_res.get("rank_up", False)
+            reason = end_res.get("reason", "")
             daily_cap = end_res.get("daily_cap_reached", False)
             
             if rank_up:
                 log(f"*** PROMOTION! Antigravity ranked up to {rank}! ***")
                 
-            log(f"Signal END sent. Counted: {counted}, Earned: +{earned} Bits | Coins: {coins} | Tasks: {tasks} | Rank: {rank}")
+            log(f"Signal END sent. Counted: {counted} (reason: {reason}), Earned: +{earned} Bits | Coins: {coins} | Tasks: {tasks} | Rank: {rank}")
             
             # 3. Check /me for status & plot info
             me = api_request("/me", method="GET")
@@ -150,7 +152,7 @@ def main():
                 log("Daily cap (240 Bits) reached! Sleeping for 30 minutes before next check...")
                 time.sleep(1800)
             else:
-                time.sleep(4)
+                time.sleep(5)
             
         except Exception as e:
             log(f"Unexpected loop exception: {e}")
